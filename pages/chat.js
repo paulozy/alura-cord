@@ -29,7 +29,7 @@ const Chat = () => {
 
         const message = {
             // id: messageList.length + 1,
-            from: 'paulozy',
+            from: {username},
             messageText: newMessage, 
         }
 
