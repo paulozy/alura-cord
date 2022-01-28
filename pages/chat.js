@@ -1,6 +1,7 @@
-import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js'
+import { BoxLoading } from 'react-loadingg'
+import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import appThemes from '../config.json';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMwNjEwNywiZXhwIjoxOTU4ODgyMTA3fQ.xV0Pzb4pn1PJ4tntMP2zPBenqSvqHGCmRzPpmffyPio'
@@ -11,14 +12,18 @@ const Chat = () => {
        
     const [message, setMessage] = useState('')
     const [messageList, setMessageList] = useState([])
+    const [loading, setLoading] = useState(false)
 
+    useEffect(async () => { 
+        setLoading(true)
 
-    useEffect(() => {
-        supabaseClient
-            .from('messages')
-            .select('*')
-            .order('id', { ascending: false })
-            .then(({ data }) => setMessageList(data))
+            await supabaseClient
+                .from('messages')
+                .select('*')
+                .order('id', { ascending: false })
+                .then(({ data }) => setMessageList(data))
+
+        setLoading(true)
     }, [])
 
     const handleNewMessase = newMessage => {
@@ -28,8 +33,7 @@ const Chat = () => {
         }
 
         const message = {
-            // id: messageList.length + 1,
-            from: {username},
+            from: 'paulozy',
             messageText: newMessage, 
         }
 
@@ -85,50 +89,58 @@ const Chat = () => {
                     }}
                 >
 
-                    <MessageList messages={messageList}/>
-                    
+                    {!loading && 
+                        <BoxLoading />
+                    }
 
-                    <Box
-                        as="form"
-                        styleSheet={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'middle',
-                        }}
-                    >
-                        <TextField
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            onKeyPress={(e) => {
-                                if(e.key === "Enter") {
-                                    e.preventDefault()
-                                    handleNewMessase(message)
-                                }
-                            }}
-                            placeholder="Insira sua mensagem aqui..."
-                            type="textarea"
-                            styleSheet={{
-                                width: '100%',
-                                border: '0',
-                                resize: 'none',
-                                borderRadius: '5px',
-                                padding: '6px 8px',
-                                backgroundColor: appThemes.theme.colors.neutrals[800],
-                                marginRight: '12px',
-                                color: appThemes.theme.colors.neutrals[200],
-                            }}
-                        />
-                        <Button
-                            value={message}
-                            label="Enviar"
-                            variant='secondary'
-                            colorVariant='light'
-                            size="xl"
-                            onClick={() => {
-                                handleNewMessase(message)
-                            }}    
-                        />
-                    </Box>
+                    {loading && 
+                        <>
+                            <MessageList messages={messageList}/>
+
+                                <Box
+                                as="form"
+                                styleSheet={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'middle',
+                                }}
+                                >
+                                <TextField
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if(e.key === "Enter") {
+                                            e.preventDefault()
+                                            handleNewMessase(message)
+                                        }
+                                    }}
+                                    placeholder="Insira sua mensagem aqui..."
+                                    type="textarea"
+                                    styleSheet={{
+                                        width: '100%',
+                                        border: '0',
+                                        resize: 'none',
+                                        borderRadius: '5px',
+                                        padding: '6px 8px',
+                                        backgroundColor: appThemes.theme.colors.neutrals[800],
+                                        marginRight: '12px',
+                                        color: appThemes.theme.colors.neutrals[200],
+                                    }}
+                                />
+                                <Button
+                                    value={message}
+                                    label="Enviar"
+                                    variant='secondary'
+                                    colorVariant='light'
+                                    size="xl"
+                                    onClick={() => {
+                                        handleNewMessase(message)
+                                    }}    
+                                />
+                                </Box>
+                        </>
+                    }
+                    
                 </Box>
             </Box>
         </Box>
