@@ -58,7 +58,7 @@ export default function home() {
             onSubmit={(e) => {
               e.preventDefault()
               
-              route.push('/chat')
+              route.push(`/chat?username=${username}`)
 
             }}
             as="form"

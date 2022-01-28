@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js'
 import { BoxLoading } from 'react-loadingg'
+import { useRouter } from 'next/router'
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import appThemes from '../config.json';
 
@@ -8,8 +10,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5v
 const SUPABASE_URL = 'https://tqvtumnqdwzwrshcmime.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+const listennerMessagesOnLive = (addMessage) => {
+    return supabaseClient
+        .from('messages')
+        .on('INSERT', (res) => {
+            addMessage(res.new)
+        })
+        .subscribe()
+}
+
 const Chat = () => {
-       
+    const route = useRouter()
+    const loggedUser = route.query.username
+
     const [message, setMessage] = useState('')
     const [messageList, setMessageList] = useState([])
     const [loading, setLoading] = useState(false)
@@ -24,6 +37,15 @@ const Chat = () => {
                 .then(({ data }) => setMessageList(data))
 
         setLoading(true)
+
+        listennerMessagesOnLive((newMessage) => {
+            setMessageList(valueMessageList => {
+                return [
+                    newMessage,
+                    ...valueMessageList
+                ]
+            })
+        })
     }, [])
 
     const handleNewMessase = newMessage => {
@@ -33,19 +55,14 @@ const Chat = () => {
         }
 
         const message = {
-            from: 'paulozy',
+            from: loggedUser,
             messageText: newMessage, 
         }
 
         supabaseClient
             .from('messages')
             .insert([ message ])
-            .then(({ data }) => {
-                setMessageList([
-                    data[0],
-                    ...messageList
-                ])
-            })
+            .then(({ data }) => data)
 
         
         setMessage('')
@@ -85,7 +102,7 @@ const Chat = () => {
                         backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         flexDirection: 'column',
                         borderRadius: '5px',
-                        padding: '16px',
+                        padding: '16px', 
                     }}
                 >
 
@@ -127,6 +144,10 @@ const Chat = () => {
                                         color: appThemes.theme.colors.neutrals[200],
                                     }}
                                 />
+
+                                <ButtonSendSticker 
+                                    onStickerClick={sticker => handleNewMessase(`:sticker: ${sticker}`)}/>
+
                                 <Button
                                     value={message}
                                     label="Enviar"
@@ -140,7 +161,6 @@ const Chat = () => {
                                 </Box>
                         </>
                     }
-                    
                 </Box>
             </Box>
         </Box>
@@ -225,7 +245,12 @@ const MessageList = ({ messages }) => {
                         {(new Date().toLocaleDateString())}
                     </Text>
                 </Box>
-                {messageText}
+                {messageText.startsWith(':sticker:') 
+                    ? <Image 
+                        size="sz"
+                        src={messageText.replace(':sticker:', '')} />
+                    : (messageText)
+                }
             </Text>
                 )
             })}
